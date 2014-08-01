@@ -5,7 +5,6 @@
 #include "crtdbg.h"
 #define _FAR_NO_NAMELESS_UNIONS
 #include "plugin.hpp"
-//#include "farkeys.hpp"
 #include "farcolor.hpp"
 #include "guid.hpp"
 #include "lng.hpp"
@@ -28,6 +27,11 @@ static const DWORD CTRL_PRESSED =
 RIGHT_CTRL_PRESSED |
 LEFT_CTRL_PRESSED;
 
+static const int64_t KiloByte = 1024ULL;
+static const int64_t MegaByte = KiloByte * 1024ULL;
+static const int64_t GigaByte = MegaByte * 1024ULL;
+static const int64_t TeraByte = GigaByte * 1024ULL;
+static const int64_t PetaByte = TeraByte * 1024ULL;
 
 static struct PluginStartupInfo StartupInfo;
 
@@ -101,8 +105,10 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 			StartupInfo.PanelControl(PANEL_ACTIVE, FCTL_GETPANELDIRECTORY, InData->SizeofCurDir, &InData->PanelCurDir[4]);
 		}
 		wchar_t *z = (wchar_t *) L"\\";
-		if (wcscmp(&InData->PanelCurDir[wcslen(InData->PanelCurDir)-1], z) == 0) wcscat(InData->PanelCurDir, L"*");
-		else wcscat(InData->PanelCurDir, L"\\*");
+		if (wcscmp(&InData->PanelCurDir[wcslen(InData->PanelCurDir)-1], z) == 0) 
+			wcscat(InData->PanelCurDir, L"*");
+		else 
+			wcscat(InData->PanelCurDir, L"\\*");
 
 		StartupInfo.PanelControl(PANEL_PASSIVE, FCTL_GETPANELINFO, 0, &InData->PInfo);
 		InData->hDialogThread = CreateThread(0, 0, DDialogThread, InData, 0, &d);
@@ -114,22 +120,26 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 		DItem[0].X2 = 32;
 		DItem[0].Y2 = 2;
 		DItem[0].Flags = 0;
-		DItem[0].Data = L"Size Manager";
+		DItem[0].Data = GetMsg(MCaption);
 
 		DItem[1].Type = DI_TEXT;
 		DItem[1].X1 = 2;
 		DItem[1].Y1 = 1;
 		DItem[1].X2 = 15;
 		DItem[1].Y2 = 1;
-		DItem[1].Data = L"Идет расчет...";
+		DItem[1].Data = GetMsg(MProcessing);
 
 		DItem[2].Type = DI_TEXT;
 		DItem[2].X1 = 2;
 		DItem[2].Y1 = 2;
 		DItem[2].X2 = 30;
 		DItem[2].Y2 = 2;
-		if (!InData->IgnoreSymLinks) DItem[2].Data = L"Нажмите S для пропуска ссылок";
-		else { DItem[2].Data = L"Нажмите S для расчета ссылок"; DItem[2].X2 = 29;}
+		if (!InData->IgnoreSymLinks) 
+			DItem[2].Data = GetMsg(MSkipLinks);
+		else { 
+			DItem[2].Data = GetMsg(MProcessLinks); 
+			DItem[2].X2 = 29; 
+		}
 
 		InData->hDialog = StartupInfo.DialogInit(&MainGuid, &Dlg1Guid, 
 			-1, -1, 33, 3, 0, &DItem[0],
@@ -189,18 +199,22 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 			DlgItems[0].Y1 = 0;
 			DlgItems[0].Y2 = PanelHeight;
 			DlgItems[0].Flags = DIF_FOCUS;
-			DlgItems[0].Data = L"Size Manager";
+			DlgItems[0].Data = GetMsg(MCaption);
 
 			DlgItems[1].Type = DI_TEXT;
 			DlgItems[1].X1 = 2;
 			DlgItems[1].Y1 = PanelHeight;
 			DlgItems[1].X2 = 37;
 			DlgItems[1].Y2 = PanelHeight;
-			if (!InData->IgnoreSymLinks) DlgItems[1].Data = L"Нажмите S для перерасчета без ссылок";
-			else DlgItems[1].Data = L"Нажмите S для перерасчета c ссылками";
+			if (!InData->IgnoreSymLinks) 
+				DlgItems[1].Data = GetMsg(MUpdateNoLinks);
+			else 
+				DlgItems[1].Data = GetMsg(MUpdateWithLinks);
+
 			InData->hDialog = StartupInfo.DialogInit(&MainGuid, &DlgGuid, 
 				InData->PInfo.PanelRect.left, InData->PInfo.PanelRect.top,
-				InData->PInfo.PanelRect.right, InData->PInfo.PanelRect.bottom, nullptr, DlgItems, (InData->CountItem*2)+2, 0,
+				InData->PInfo.PanelRect.right, InData->PInfo.PanelRect.bottom, 
+				nullptr, DlgItems, (InData->CountItem*2)+2, 0,
 				FDLG_NODRAWSHADOW|FDLG_SMALLDIALOG, DialogProc, InData);
 			StartupInfo.DialogRun(InData->hDialog);
 			StartupInfo.DialogFree(InData->hDialog);
@@ -272,7 +286,12 @@ static int64_t CalcSizeRecursive(wchar_t *Dir, InsidePluginData *InData)
 	wchar_t *tDir = (wchar_t *) GlobalLock(hDir);
 	wcscpy(tDir, Dir);
 	wcscat(tDir, L"\\*");
-	if (!InData->Signal){ GlobalUnlock(hDir); GlobalFree(hDir); return 0;}
+	if (!InData->Signal)
+	{ 
+		GlobalUnlock(hDir); 
+		GlobalFree(hDir); 
+		return 0;
+	}
 	HANDLE File = FindFirstFileW(tDir, &Data);
 	if (File == INVALID_HANDLE_VALUE) return 0;
 	do
@@ -295,7 +314,14 @@ static int64_t CalcSizeRecursive(wchar_t *Dir, InsidePluginData *InData)
 			}
 		}
 		else Size += ((int64_t)Data.nFileSizeHigh<<32) + Data.nFileSizeLow;
-		if (!InData->Signal){ FindClose(File); GlobalUnlock(hDir); GlobalFree(hDir); return 0; }
+
+		if (!InData->Signal)
+		{ 
+			FindClose(File); 
+			GlobalUnlock(hDir); 
+			GlobalFree(hDir); 
+			return 0; 
+		}
 	} while(FindNextFileW(File, &Data));
 	GlobalUnlock(hDir);
 	GlobalFree(hDir);
@@ -362,14 +388,25 @@ DWORD WINAPI DDialogThread(void *lpData)
 		{
 			if (InFiles == nullptr)
 			{
+				const wchar_t *StrInFiles = GetMsg(MInFiles);
 				InFiles = (DirSize *) GlobalLock(GlobalAlloc(GHND, sizeof(DirSize)));
-				InFiles->Dir = (wchar_t *) GlobalLock(GlobalAlloc(GHND, (wcslen(L"В файлах")+1)*2));
-				wcscpy(InFiles->Dir, L"В файлах");
+				InFiles->Dir = (wchar_t *)GlobalLock(GlobalAlloc(GHND, (wcslen(StrInFiles) + 1) * 2));
+				wcscpy(InFiles->Dir, StrInFiles);
 				InFiles->NextDir = nullptr;
 			}
 			InFiles->Size += ((int64_t)Data.nFileSizeHigh<<32) + Data.nFileSizeLow;
 		}
-		if (!InData->Signal){ if (InFiles) GlobalUnlock(GlobalHandle(InFiles)); GlobalFree(GlobalHandle(InFiles)); InData->Complete = TRUE; FindClose(File); /* SetEvent(InData->hEvent);*/ return 0; }
+
+		if (!InData->Signal)
+		{ 
+			if (InFiles) 
+				GlobalUnlock(GlobalHandle(InFiles)); 
+			GlobalFree(GlobalHandle(InFiles)); 
+			InData->Complete = TRUE; 
+			FindClose(File); 
+			/* SetEvent(InData->hEvent);*/ 
+			return 0; 
+		}
 	}
 	while (FindNextFileW(File, &Data));
 	FindClose(File);
@@ -406,8 +443,6 @@ DWORD WINAPI DDialogThread(void *lpData)
 	}
 
 	CurrentDir = InData->FirstDir;
-	int64_t TByte = 1099511627776ULL;
-    int64_t PByte = 1125899906842624ULL;
 	while (CurrentDir != nullptr)
 	{
 	 	int64_t BufSize = CurrentDir->Size;
@@ -427,47 +462,86 @@ DWORD WINAPI DDialogThread(void *lpData)
 		MCHKHEAP;
         switch (i)
         {
-            case 0 : { wcscat(CurrentDir->Dimension, L" Байт"); break;}
+            case 0 : { 
+				wcscat(CurrentDir->Dimension, L" ");
+				wcscat(CurrentDir->Dimension, GetMsg(MBytes));
+				break;
+			}
             case 1 : {
                 b = CurrentDir->Size - (BufSize<<10);
-                if (b > 0) n = (b * 10)/1024;
-                if (n > 1){ _i64tow(n, Drob, 10);
-				MCHKHEAP;
-                wcscat(CurrentDir->Dimension, L",");
-                wcscat(CurrentDir->Dimension, Drob);}
-                wcscat(CurrentDir->Dimension, L" КБ"); break;}
+				if (b > 0) 
+					n = (b * 10) / KiloByte;
+				if (n > 1)
+				{
+					_i64tow(n, Drob, 10);
+					MCHKHEAP;
+					wcscat(CurrentDir->Dimension, L",");
+					wcscat(CurrentDir->Dimension, Drob);
+				}
+				wcscat(CurrentDir->Dimension, L" ");
+				wcscat(CurrentDir->Dimension, GetMsg(MKiloBytes));
+				break;
+			}
             case 2 : {
                 b = CurrentDir->Size - (BufSize<<20);
-                if (b > 0) n = (b * 10)/1048576;
-                if (n > 1){ _i64tow(n, Drob, 10);
-				MCHKHEAP;
-                wcscat(CurrentDir->Dimension, L",");
-                wcscat(CurrentDir->Dimension, Drob);}
-                wcscat(CurrentDir->Dimension, L" МБ"); break;}
+				if (b > 0) 
+					n = (b * 10) / MegaByte;
+				if (n > 1)
+				{
+					_i64tow(n, Drob, 10);
+					MCHKHEAP;
+					wcscat(CurrentDir->Dimension, L",");
+					wcscat(CurrentDir->Dimension, Drob);
+				}
+				wcscat(CurrentDir->Dimension, L" ");
+				wcscat(CurrentDir->Dimension, GetMsg(MMegaBytes));
+				break;
+			}
             case 3 : {
                 b = CurrentDir->Size - (BufSize<<30);
-                if (b > 0) n = (b * 10)/1073741824;
-                if (n > 1){ _i64tow(n, Drob, 10);
-				MCHKHEAP;
-                wcscat(CurrentDir->Dimension, L",");
-                wcscat(CurrentDir->Dimension, Drob);}
-                wcscat(CurrentDir->Dimension, L" ГБ"); break;}
+				if (b > 0)
+					n = (b * 10) / GigaByte;
+				if (n > 1)
+				{
+					_i64tow(n, Drob, 10);
+					MCHKHEAP;
+					wcscat(CurrentDir->Dimension, L",");
+					wcscat(CurrentDir->Dimension, Drob);
+				}
+				wcscat(CurrentDir->Dimension, L" ");
+				wcscat(CurrentDir->Dimension, GetMsg(MGigaBytes));
+				break;
+			}
             case 4 : {
                 b = CurrentDir->Size - (BufSize<<40);
-                if (b > 0) n = (b * 10)/TByte;
-                if (n > 1){ _i64tow(n, Drob, 10);
-				MCHKHEAP;
-                wcscat(CurrentDir->Dimension, L",");
-                wcscat(CurrentDir->Dimension, Drob);}
-                wcscat(CurrentDir->Dimension, L" ТБ"); break;}
+				if (b > 0) 
+					n = (b * 10) / TeraByte;
+				if (n > 1)
+				{
+					_i64tow(n, Drob, 10);
+					MCHKHEAP;
+					wcscat(CurrentDir->Dimension, L",");
+					wcscat(CurrentDir->Dimension, Drob);
+				}
+				wcscat(CurrentDir->Dimension, L" ");
+				wcscat(CurrentDir->Dimension, GetMsg(MTeraBytes));
+				break;
+			}
             case 5 : {
                 b = CurrentDir->Size - (BufSize<<50);
-                if (b > 0) n = (b * 10)/PByte;
-                if (n > 1){ _i64tow(n, Drob, 10);
-				MCHKHEAP;
-                wcscat(CurrentDir->Dimension, L",");
-                wcscat(CurrentDir->Dimension, Drob);}
-                wcscat(CurrentDir->Dimension, L" ПБ"); break;}
+				if (b > 0)
+					n = (b * 10) / PetaByte;
+				if (n > 1)
+				{
+					_i64tow(n, Drob, 10);
+					MCHKHEAP;
+					wcscat(CurrentDir->Dimension, L",");
+					wcscat(CurrentDir->Dimension, Drob);
+				}
+				wcscat(CurrentDir->Dimension, L" ");
+				wcscat(CurrentDir->Dimension, GetMsg(MPetaBytes));
+				break;
+			}
         }
         CurrentDir = CurrentDir->NextDir;
 		if (!InData->Signal){ InData->Complete = TRUE; /*SetEvent(InData->hEvent);*/ return 0; }

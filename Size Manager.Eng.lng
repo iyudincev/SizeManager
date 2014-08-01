@@ -1,4 +1,16 @@
 .Language=English,English
 
 "Size Manager"
-
+"Size Manager"
+"Processing..."
+"Press S to skip links"
+"Press S to process links"
+"Press S to update with no links"
+"Press S to update with links"
+"In files"
+"Bytes"
+"KiB"
+"MiB"
+"GiB"
+"TiB"
+"PiB"
