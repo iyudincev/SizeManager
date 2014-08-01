@@ -1,5 +1,6 @@
 EXPORTS
+    GetGlobalInfoW
     GetPluginInfoW 
-    OpenPluginW
+    OpenW
     SetStartupInfoW
     ProcessSynchroEventW

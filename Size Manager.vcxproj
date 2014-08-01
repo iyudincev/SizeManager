@@ -66,24 +66,24 @@
     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\</OutDir>
-    <IntDir>.\</IntDir>
+    <OutDir>$(SolutionDir)debug.32W.vc\</OutDir>
+    <IntDir>$(OutDir)obj\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)debug.64W.vc\</OutDir>
+    <IntDir>$(OutDir)obj\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\</OutDir>
-    <IntDir>.\</IntDir>
+    <OutDir>$(SolutionDir)final.32W.vc\</OutDir>
+    <IntDir>$(OutDir)obj\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)final.64W.vc\</OutDir>
+    <IntDir>$(OutDir)obj\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -97,14 +97,21 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <AdditionalIncludeDirectories>..\common\unicode</AdditionalIncludeDirectories>
+      <StringPooling>true</StringPooling>
+      <CallingConvention>FastCall</CallingConvention>
     </ClCompile>
     <Link>
-      <OutputFile>debug.32W.vc\SizeManager.dll</OutputFile>
+      <OutputFile>debug.32W.vc\Size Manager.dll</OutputFile>
       <ModuleDefinitionFile>SizeManager.dll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
+      <GenerateMapFile>true</GenerateMapFile>
+      <NoEntryPoint>true</NoEntryPoint>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\common\unicode</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -119,6 +126,9 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\common\unicode</AdditionalIncludeDirectories>
+      <StringPooling>true</StringPooling>
+      <CallingConvention>FastCall</CallingConvention>
     </ClCompile>
     <Link>
       <OutputFile>debug.64W.vc\Size Manager.dll</OutputFile>
@@ -126,10 +136,16 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
+      <GenerateMapFile>true</GenerateMapFile>
+      <NoEntryPoint>true</NoEntryPoint>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\common\unicode</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
+      <AdditionalIncludeDirectories>..\common\unicode</AdditionalIncludeDirectories>
       <Optimization>MinSpace</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -139,12 +155,19 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <StringPooling>true</StringPooling>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <AssemblerOutput>All</AssemblerOutput>
+      <CallingConvention>FastCall</CallingConvention>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
     <Link>
-      <OutputFile>final.32W.vc\SizeManager.dll</OutputFile>
+      <OutputFile>final.32W.vc\Size Manager.dll</OutputFile>
       <ModuleDefinitionFile>SizeManager.dll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -152,14 +175,19 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <TargetMachine>MachineX86</TargetMachine>
+      <NoEntryPoint>true</NoEntryPoint>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\common\unicode</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>MinSpace</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SIZEMANAGER_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -167,6 +195,11 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\common\unicode</AdditionalIncludeDirectories>
+      <StringPooling>true</StringPooling>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <CallingConvention>FastCall</CallingConvention>
     </ClCompile>
     <Link>
       <OutputFile>final.64W.vc\Size Manager.dll</OutputFile>
@@ -176,7 +209,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
+      <GenerateMapFile>true</GenerateMapFile>
+      <NoEntryPoint>true</NoEntryPoint>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>..\common\unicode</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="SizeManager.cpp" />
