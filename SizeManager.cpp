@@ -57,7 +57,6 @@ struct InsidePluginData
 	int CountItem;
 	BOOL Network;
 	BOOL Signal;
-	BOOL Complete;
 	BOOL IgnoreSymLinks;
 	BOOL DoubleCall;
 	BOOL Restart;
@@ -91,7 +90,6 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 		InData->Signal = TRUE;
 		InData->Network = TRUE;
 		InData->Restart = FALSE;
-		InData->Complete = TRUE;
 		
 		size_t bufSize = StartupInfo.PanelControl(PANEL_ACTIVE, FCTL_GETPANELDIRECTORY, 0, nullptr);
 		HGLOBAL hDirInfo = GlobalAlloc(GHND, bufSize);
@@ -127,20 +125,15 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 
 		FarDialogItem DItem[] = {
 		/*      Type         X1 Y1  X2 Y2  Sel    Hist     Mask     Flags        Data               */
-		/* 0*/{ DI_DOUBLEBOX, 0, 0, 32, 2, { 0 }, nullptr, nullptr, DIF_FOCUS  , GetMsg(MCaption)    },
-		/* 1*/{ DI_TEXT     , 2, 1, 15, 1, { 0 }, nullptr, nullptr, 0          , GetMsg(MProcessing) },
-		/* 2*/{ DI_TEXT     , 2, 2, 30, 2, { 0 }, nullptr, nullptr, 0          , nullptr             },
+		/* 0*/{ DI_DOUBLEBOX, 0, 0, 52, 2, { 0 }, nullptr, nullptr, DIF_FOCUS  , GetMsg(MCaption)    },
+		/* 1*/{ DI_TEXT     , 2, 1, 50, 1, { 0 }, nullptr, nullptr, 0          , GetMsg(MProcessing) },
+		/* 2*/{ DI_TEXT     , 2, 2, 50, 2, { 0 }, nullptr, nullptr, 0          , nullptr             },
 		};
-		if (!InData->IgnoreSymLinks)
-			DItem[2].Data = GetMsg(MSkipLinks);
-		else 
-		{
-			DItem[2].Data = GetMsg(MProcessLinks);
-			DItem[2].X2 = 29;
-		}
+		DItem[2].Data = (InData->IgnoreSymLinks) ? GetMsg(MProcessLinks) : GetMsg(MSkipLinks);
+		DItem[2].X2 = wcslen(DItem[2].Data) - 1;
 		
 		InData->hDialog = StartupInfo.DialogInit(&MainGuid, &Dlg1Guid,
-			-1, -1, 33, 3,
+			-1, -1, 53, 3,
 			nullptr,
 			DItem, _countof(DItem),
 			0, FDLG_SMALLDIALOG, DialogProc1, InData);
@@ -203,14 +196,11 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 			DlgItems[0].Data = GetMsg(MCaption);
 
 			DlgItems[1].Type = DI_TEXT;
+			DlgItems[1].Data = (InData->IgnoreSymLinks) ? GetMsg(MUpdateWithLinks) : GetMsg(MUpdateNoLinks);
 			DlgItems[1].X1 = 2;
 			DlgItems[1].Y1 = PanelHeight;
-			DlgItems[1].X2 = 37;
+			DlgItems[1].X2 = wcslen(DlgItems[1].Data) - 1;
 			DlgItems[1].Y2 = PanelHeight;
-			if (!InData->IgnoreSymLinks)
-				DlgItems[1].Data = GetMsg(MUpdateNoLinks);
-			else
-				DlgItems[1].Data = GetMsg(MUpdateWithLinks);
 
 			InData->hDialog = StartupInfo.DialogInit(&MainGuid, &DlgGuid,
 				InData->PInfo.PanelRect.left, InData->PInfo.PanelRect.top,
@@ -265,7 +255,7 @@ void WINAPI SetStartupInfoW(const PluginStartupInfo *StartInfo)
 	StartupInfo = *StartInfo;
 }
 
-int WINAPI ProcessSynchroEventW(const ProcessSynchroEventInfo *Info)
+intptr_t WINAPI ProcessSynchroEventW(const ProcessSynchroEventInfo *Info)
 {
 	if (Info->StructSize < sizeof(ProcessSynchroEventInfo))
 		return 0;
@@ -326,9 +316,9 @@ uint64_t CalcSizeRecursive(wchar_t *Dir, InsidePluginData *InData)
 			return 0;
 		}
 	} while (FindNextFileW(File, &Data));
+	FindClose(File);
 	GlobalUnlock(hDir);
 	GlobalFree(hDir);
-	FindClose(File);
 	return Size;
 }
 
@@ -340,11 +330,9 @@ DWORD WINAPI DDialogThread(void *lpData)
 	DirSize *CurrentDir = nullptr;
 	InData->FirstDir = nullptr;
 	DirSize *InFiles = nullptr;
-	InData->Complete = FALSE;
 	File = FindFirstFileW(InData->PanelCurDir, &Data);
 	if (File == INVALID_HANDLE_VALUE)
 	{
-		InData->Complete = TRUE;
 		InData->Called = 1;
 		StartupInfo.AdvControl(&MainGuid, ACTL_SYNCHRO, 0, InData);
 		return 0;
@@ -356,8 +344,8 @@ DWORD WINAPI DDialogThread(void *lpData)
 			if (wcscmp(Data.cFileName, L".") != 0 && wcscmp(Data.cFileName, L"..") != 0)
 			{
 				if (InData->IgnoreSymLinks)
-					if (Data.dwFileAttributes&FILE_ATTRIBUTE_REPARSE_POINT)
-						if (Data.dwReserved0&IO_REPARSE_TAG_SYMLINK) continue;
+					if (Data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+						if (Data.dwReserved0 & IO_REPARSE_TAG_SYMLINK) continue;
 				if (InData->FirstDir == nullptr)
 				{
 					InData->FirstDir = (DirSize *)GlobalLock(GlobalAlloc(GHND, sizeof(DirSize)));
@@ -404,7 +392,6 @@ DWORD WINAPI DDialogThread(void *lpData)
 			if (InFiles)
 				GlobalUnlock(GlobalHandle(InFiles));
 			GlobalFree(GlobalHandle(InFiles));
-			InData->Complete = TRUE;
 			FindClose(File);
 			/* SetEvent(InData->hEvent);*/
 			return 0;
@@ -443,7 +430,6 @@ DWORD WINAPI DDialogThread(void *lpData)
 		CurrentDir = CurrentDir->NextDir;
 		if (!InData->Signal)
 		{ 
-			InData->Complete = TRUE; 
 			/*SetEvent(InData->hEvent);*/ 
 			return 0; 
 		}
@@ -553,7 +539,6 @@ DWORD WINAPI DDialogThread(void *lpData)
 		CurrentDir = CurrentDir->NextDir;
 		if (!InData->Signal)
 		{ 
-			InData->Complete = TRUE; 
 			/*SetEvent(InData->hEvent);*/ 
 			return 0; 
 		}
@@ -567,7 +552,6 @@ DWORD WINAPI DDialogThread(void *lpData)
 		CurrentDir = CurrentDir->NextDir;
 		if (!InData->Signal)
 		{ 
-			InData->Complete = TRUE;
 			/* SetEvent(InData->hEvent);*/ 
 			return 0; 
 		}
@@ -604,11 +588,9 @@ DWORD WINAPI DDialogThread(void *lpData)
 		MCHKHEAP;
 		if (!InData->Signal)
 		{ 
-			InData->Complete = TRUE;  
 			return 0; 
 		}
 	}
-	InData->Complete = TRUE;
 	while (InData->hDialog == 0);
 	InData->Called = 1;
 	StartupInfo.AdvControl(&MainGuid, ACTL_SYNCHRO, 0, InData);
@@ -640,7 +622,7 @@ intptr_t WINAPI DialogProc1(HANDLE hDlg, intptr_t Msg, intptr_t Param1, void *Pa
 		}
 		break;
 	}
-	case DM_CLOSE:
+	case DN_CLOSE:
 	{
 		if (Param1 != 555)
 		{
