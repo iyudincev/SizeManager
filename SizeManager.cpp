@@ -112,28 +112,12 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 
 		StartupInfo.PanelControl(PANEL_PASSIVE, FCTL_GETPANELINFO, 0, &InData->PInfo);
 		InData->hDialogThread = CreateThread(0, 0, DDialogThread, InData, 0, &d);
-		FarDialogItem DItem[3];
-		memset(DItem, 0, sizeof(DItem));
-		DItem[0].Type = DI_DOUBLEBOX;
-		DItem[0].X1 = 0;
-		DItem[0].Y1 = 0;
-		DItem[0].X2 = 32;
-		DItem[0].Y2 = 2;
-		DItem[0].Flags = 0;
-		DItem[0].Data = GetMsg(MCaption);
-
-		DItem[1].Type = DI_TEXT;
-		DItem[1].X1 = 2;
-		DItem[1].Y1 = 1;
-		DItem[1].X2 = 15;
-		DItem[1].Y2 = 1;
-		DItem[1].Data = GetMsg(MProcessing);
-
-		DItem[2].Type = DI_TEXT;
-		DItem[2].X1 = 2;
-		DItem[2].Y1 = 2;
-		DItem[2].X2 = 30;
-		DItem[2].Y2 = 2;
+		FarDialogItem DItem[] = {
+		/*      Type         X1 Y1  X2 Y2  Sel    Hist     Mask     Flags        Data               */
+		/* 0*/{ DI_DOUBLEBOX, 0, 0, 32, 2, { 0 }, nullptr, nullptr, DIF_FOCUS  , GetMsg(MCaption)    },
+		/* 1*/{ DI_TEXT     , 2, 1, 15, 1, { 0 }, nullptr, nullptr, 0          , GetMsg(MProcessing) },
+		/* 2*/{ DI_TEXT     , 2, 2, 30, 2, { 0 }, nullptr, nullptr, 0          , nullptr             },
+		};
 		if (!InData->IgnoreSymLinks)
 			DItem[2].Data = GetMsg(MSkipLinks);
 		else 
@@ -144,12 +128,22 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 
 		InData->hDialog = StartupInfo.DialogInit(&MainGuid, &Dlg1Guid,
 			-1, -1, 33, 3,
-			0,
-			DItem, 3,
+			nullptr,
+			DItem, _countof(DItem),
 			0, FDLG_SMALLDIALOG, DialogProc1, InData);
 
 		StartupInfo.DialogRun(InData->hDialog);
 		StartupInfo.DialogFree(InData->hDialog);
+
+		InData->hDialog = StartupInfo.DialogInit(&MainGuid, &Dlg1Guid,
+			-1, -1, 33, 3,
+			nullptr,
+			DItem, _countof(DItem),
+			0, FDLG_SMALLDIALOG, DialogProc1, InData);
+
+		StartupInfo.DialogRun(InData->hDialog);
+		StartupInfo.DialogFree(InData->hDialog);
+
 		GlobalUnlock(GlobalHandle(InData->PanelCurDir));
 		GlobalFree(GlobalHandle(InData->PanelCurDir));
 		if (InData->Signal && !InData->Restart)
