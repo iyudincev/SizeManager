@@ -220,7 +220,10 @@
     <ClCompile Include="SizeManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="guid.hpp" />
+    <ClInclude Include="lng.hpp" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="version.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Size Manager.rc" />
