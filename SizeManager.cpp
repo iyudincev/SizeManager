@@ -90,7 +90,7 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 		InData->Signal = TRUE;
 		InData->Network = TRUE;
 		InData->Restart = FALSE;
-		
+
 		size_t bufSize = StartupInfo.PanelControl(PANEL_ACTIVE, FCTL_GETPANELDIRECTORY, 0, nullptr);
 		HGLOBAL hDirInfo = GlobalAlloc(GHND, bufSize);
 		FarPanelDirectory* dirInfo = static_cast<FarPanelDirectory*>(GlobalLock(hDirInfo));
@@ -98,7 +98,7 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 		StartupInfo.PanelControl(PANEL_ACTIVE, FCTL_GETPANELDIRECTORY, bufSize, dirInfo);
 
 		InData->SizeofCurDir = wcslen(dirInfo->Name) + 1 + 8;
-		InData->PanelCurDir = static_cast<wchar_t *>(GlobalLock(GlobalAlloc(GHND, 
+		InData->PanelCurDir = static_cast<wchar_t *>(GlobalLock(GlobalAlloc(GHND,
 			InData->SizeofCurDir * sizeof(wchar_t))));
 		wcscpy(InData->PanelCurDir, dirInfo->Name);
 
@@ -131,7 +131,7 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 		};
 		DItem[2].Data = (InData->IgnoreSymLinks) ? GetMsg(MProcessLinks) : GetMsg(MSkipLinks);
 		DItem[2].X2 = wcslen(DItem[2].Data) - 1;
-		
+
 		InData->hDialog = StartupInfo.DialogInit(&MainGuid, &Dlg1Guid,
 			-1, -1, 53, 3,
 			nullptr,
@@ -140,7 +140,7 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 
 		StartupInfo.DialogRun(InData->hDialog);
 		StartupInfo.DialogFree(InData->hDialog);
-		
+
 		GlobalUnlock(GlobalHandle(InData->PanelCurDir));
 		GlobalFree(GlobalHandle(InData->PanelCurDir));
 		if (InData->Signal && !InData->Restart)
@@ -263,7 +263,7 @@ intptr_t WINAPI ProcessSynchroEventW(const ProcessSynchroEventInfo *Info)
 	if (Info->Event == SE_COMMONSYNCHRO)
 	{
 		InsidePluginData *InData = static_cast<InsidePluginData *>(Info->Param);
-		if (InData->Called == 1) 
+		if (InData->Called == 1)
 			StartupInfo.SendDlgMessage(InData->hDialog, DM_CLOSE, 555, 0);
 	}
 	return 0;
@@ -429,9 +429,9 @@ DWORD WINAPI DDialogThread(void *lpData)
 		}
 		CurrentDir = CurrentDir->NextDir;
 		if (!InData->Signal)
-		{ 
-			/*SetEvent(InData->hEvent);*/ 
-			return 0; 
+		{
+			/*SetEvent(InData->hEvent);*/
+			return 0;
 		}
 	}
 
@@ -538,9 +538,9 @@ DWORD WINAPI DDialogThread(void *lpData)
 		}
 		CurrentDir = CurrentDir->NextDir;
 		if (!InData->Signal)
-		{ 
-			/*SetEvent(InData->hEvent);*/ 
-			return 0; 
+		{
+			/*SetEvent(InData->hEvent);*/
+			return 0;
 		}
 	}
 
@@ -551,9 +551,9 @@ DWORD WINAPI DDialogThread(void *lpData)
 		CurrentDir->Persent = (CurrentDir->Size * PanelWidth) / InData->FirstDir->Size;
 		CurrentDir = CurrentDir->NextDir;
 		if (!InData->Signal)
-		{ 
-			/* SetEvent(InData->hEvent);*/ 
-			return 0; 
+		{
+			/* SetEvent(InData->hEvent);*/
+			return 0;
 		}
 	}
 	CurrentDir = InData->FirstDir;
@@ -587,8 +587,8 @@ DWORD WINAPI DDialogThread(void *lpData)
 		CurrentDir = CurrentDir->NextDir;
 		MCHKHEAP;
 		if (!InData->Signal)
-		{ 
-			return 0; 
+		{
+			return 0;
 		}
 	}
 	while (InData->hDialog == 0);
@@ -750,7 +750,8 @@ intptr_t WINAPI DialogProc(HANDLE hDlg, intptr_t Msg, intptr_t Param1, void *Par
 	return StartupInfo.DefDlgProc(hDlg, Msg, Param1, Param2);
 }
 
-void SetDlgText(HANDLE hDlg, intptr_t index, const wchar_t *text) {
+void SetDlgText(HANDLE hDlg, intptr_t index, const wchar_t *text)
+{
 	FarGetDialogItem gi = { sizeof(FarGetDialogItem) };
 	gi.Size = StartupInfo.SendDlgMessage(hDlg, DM_GETDLGITEM, index, nullptr);
 	HGLOBAL hDlgItem = GlobalAlloc(GHND, gi.Size);
