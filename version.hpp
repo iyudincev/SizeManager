@@ -5,5 +5,5 @@
 #define PLUGIN_FILENAME L"Size Manager.dll"
 #define PLUGIN_AUTHOR L"Igor Yudincev"
 #define PLUGIN_MAJOR 3
-#define PLUGIN_MINOR 0
-#define PLUGIN_VERSION L"3.0"
+#define PLUGIN_MINOR 1
+#define PLUGIN_VERSION L"3.1"
