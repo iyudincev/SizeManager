@@ -102,7 +102,7 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 			InData->SizeofCurDir * sizeof(wchar_t))));
 		wcscpy(InData->PanelCurDir, dirInfo->Name);
 
-		if (InData->PanelCurDir[0] != '\\')
+		if (InData->PanelCurDir[0] != L'\\')
 		{
 			InData->Network = FALSE;
 			wcscpy(InData->PanelCurDir, L"\\\\?\\");
@@ -560,7 +560,6 @@ DWORD WINAPI DDialogThread(void *lpData)
 	while (CurrentDir != nullptr && InData->Signal)
 	{
 		CurrentDir->Text = (wchar_t *)GlobalLock(GlobalAlloc(GHND, sizeof(wchar_t)*(PanelWidth + 1)));
-		wchar_t *space = (wchar_t *)L" ";
 		MCHKHEAP;
 		if (wcslen(CurrentDir->Dir) > PanelWidth)
 			for (unsigned int l = 0; l < PanelWidth - wcslen(CurrentDir->Dimension) - 1; l++)
@@ -575,7 +574,7 @@ DWORD WINAPI DDialogThread(void *lpData)
 		MCHKHEAP;
 		size_t f = wcslen(CurrentDir->Text);
 		for (unsigned int k = 0; k < PanelWidth - f - wcslen(CurrentDir->Dimension); k++)
-			wcscat(CurrentDir->Text, space);
+			wcscat(CurrentDir->Text, L" ");
 		MCHKHEAP;
 		wcscat(CurrentDir->Text, CurrentDir->Dimension);
 		MCHKHEAP;
