@@ -322,6 +322,13 @@ uint64_t CalcSizeRecursive(wchar_t *Dir, InsidePluginData *InData)
 	return Size;
 }
 
+static void NotifyDialog(InsidePluginData *InData)
+{
+	while (InData->hDialog == 0);
+	InData->Called = 1;
+	StartupInfo.AdvControl(&MainGuid, ACTL_SYNCHRO, 0, InData);
+}
+
 DWORD WINAPI DDialogThread(void *lpData)
 {
 	InsidePluginData *InData = (InsidePluginData *)lpData;
@@ -333,8 +340,7 @@ DWORD WINAPI DDialogThread(void *lpData)
 	File = FindFirstFileW(InData->PanelCurDir, &Data);
 	if (File == INVALID_HANDLE_VALUE)
 	{
-		InData->Called = 1;
-		StartupInfo.AdvControl(&MainGuid, ACTL_SYNCHRO, 0, InData);
+		NotifyDialog(InData);
 		return 0;
 	}
 	do
@@ -404,7 +410,10 @@ DWORD WINAPI DDialogThread(void *lpData)
 	if (InData->FirstDir == nullptr)
 	{
 		if (InFiles == nullptr)
+		{
+			NotifyDialog(InData);
 			return 0;
+		}
 		InData->FirstDir = InFiles;
 	}
 	CurrentDir = InData->FirstDir;
@@ -592,9 +601,7 @@ DWORD WINAPI DDialogThread(void *lpData)
 			return 0;
 		}
 	}
-	while (InData->hDialog == 0);
-	InData->Called = 1;
-	StartupInfo.AdvControl(&MainGuid, ACTL_SYNCHRO, 0, InData);
+	NotifyDialog(InData);
 	return 0;
 }
 
