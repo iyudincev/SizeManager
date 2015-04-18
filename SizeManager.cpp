@@ -703,7 +703,9 @@ intptr_t WINAPI DialogProc(HANDLE hDlg, intptr_t Msg, intptr_t Param1, void *Par
 
 		else if (input->EventType == KEY_EVENT &&
 			input->Event.KeyEvent.bKeyDown &&
-			(input->Event.KeyEvent.dwControlKeyState & MODIFIER_PRESSED) == 0 &&
+			(input->Event.KeyEvent.dwControlKeyState & CTRL_PRESSED) != 0 &&
+			(input->Event.KeyEvent.dwControlKeyState & ALT_PRESSED) != 0 &&
+			(input->Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED) == 0 &&
 			input->Event.KeyEvent.wVirtualKeyCode == VK_DOWN ||
 
 			input->EventType == MOUSE_EVENT &&
@@ -721,7 +723,9 @@ intptr_t WINAPI DialogProc(HANDLE hDlg, intptr_t Msg, intptr_t Param1, void *Par
 
 		else if (input->EventType == KEY_EVENT &&
 			input->Event.KeyEvent.bKeyDown &&
-			(input->Event.KeyEvent.dwControlKeyState & MODIFIER_PRESSED) == 0 &&
+			(input->Event.KeyEvent.dwControlKeyState & CTRL_PRESSED) != 0 &&
+			(input->Event.KeyEvent.dwControlKeyState & ALT_PRESSED) != 0 &&
+			(input->Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED) == 0 &&
 			input->Event.KeyEvent.wVirtualKeyCode == VK_UP ||
 
 			input->EventType == MOUSE_EVENT &&
