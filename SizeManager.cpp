@@ -544,11 +544,13 @@ DWORD WINAPI DDialogThread(void *lpData)
 		}
 	}
 
-	unsigned int PanelWidth = InData->PInfo.PanelRect.right - InData->PInfo.PanelRect.left - 4;
+	size_t PanelWidth = InData->PInfo.PanelRect.right - InData->PInfo.PanelRect.left - 4;
 	CurrentDir = InData->FirstDir;
 	while (CurrentDir != nullptr && InData->Signal)
 	{
-		CurrentDir->Persent = (CurrentDir->Size * PanelWidth) / InData->FirstDir->Size;
+		CurrentDir->Persent = (InData->FirstDir->Size != 0) ? 
+			CurrentDir->Size * PanelWidth / InData->FirstDir->Size : 
+			0;
 		CurrentDir = CurrentDir->NextDir;
 		if (!InData->Signal)
 		{
@@ -573,7 +575,7 @@ DWORD WINAPI DDialogThread(void *lpData)
 		}
 		MCHKHEAP;
 		size_t f = wcslen(CurrentDir->Text);
-		for (unsigned int k = 0; k < PanelWidth - f - wcslen(CurrentDir->Dimension); k++)
+		for (size_t k = 0; k < PanelWidth - f - wcslen(CurrentDir->Dimension); k++)
 			wcscat(CurrentDir->Text, L" ");
 		MCHKHEAP;
 		wcscat(CurrentDir->Text, CurrentDir->Dimension);
