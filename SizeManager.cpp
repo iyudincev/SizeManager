@@ -218,7 +218,7 @@ HANDLE WINAPI OpenW(const OpenInfo *OInfo)
 	GlobalUnlock(GlobalHandle(InData));
 	GlobalFree(GlobalHandle(InData));
 	InData = nullptr;
-	return INVALID_HANDLE_VALUE;
+	return nullptr;
 }
 
 void WINAPI GetGlobalInfoW(GlobalInfo *Info)
